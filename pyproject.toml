@@ -1,0 +1,12 @@
+[tool.fastapi]
+entrypoint = "server:app"
+
+[project]
+name = "letter-server"
+version = "0.1.0"
+dependencies = [
+    "fastapi==0.136.1",
+    "sqlalchemy==2.0.49",
+    "pydantic==2.13.3",
+    "argon2-cffi==25.1.0"
+]
