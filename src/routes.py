@@ -8,9 +8,9 @@ from database import get_db
 from models import SendMessageData, LoginCreds
 from auth import authorise, create_session
 from dal import (
-    select_user_id, select_password_hash, select_message_receipts, 
+    select_user_id, select_password_hash, select_message_receipts,
     select_message, select_username, insert_message, insert_message_recipient,
-    conversation_exists, insert_conversation
+    conversation_exists, insert_conversation, insert_user
 )
 from utils import (
     create_1to1_coversation_id, timestamp_to_datetime_str, datetime_obj_to_timestamp
@@ -53,6 +53,20 @@ def get_routes(app):
         
         auth_token = create_session(user_id, db)
         return Response(status_code=status.HTTP_200_OK, content=json.dumps({"auth_token": auth_token}))
+
+    @app.post("/users", status_code=status.HTTP_201_CREATED)
+    async def register(creds: LoginCreds, db: Session = Depends(get_db)):
+        username, password = creds.username, creds.password
+        if len(username) > app.state.config["un_max_len"] or len(username) < app.state.config["un_min_len"]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+        if len(password) > app.state.config["pw_max_len"] or len(password) < app.state.config["pw_min_len"]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+        if select_user_id(db, username) is not None:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+
+        insert_user(db, username, hasher.hash(password))
+        return Response(status_code=status.HTTP_201_CREATED)
 
     @app.get("/messages")
     async def get_messages(auth_token: str = Security(api_key_header), db: Session = Depends(get_db)):
