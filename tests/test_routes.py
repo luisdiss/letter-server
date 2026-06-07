@@ -150,3 +150,31 @@ def test_send_message_existing_conversation_returns_empty(client, mocker):
 def test_check_username_invalid_format(client):
     response = client.head('/users/bad_name!')
     assert response.status_code == 422
+
+
+def test_register_success(client, mocker):
+    mocker.patch('routes.select_user_id', return_value=None)
+    mock_insert = mocker.patch('routes.insert_user')
+
+    response = client.post('/users', json={'username': 'alice', 'password': 'password'})
+
+    assert response.status_code == 201
+    mock_insert.assert_called_once()
+
+
+def test_register_username_taken(client, mocker):
+    mocker.patch('routes.select_user_id', return_value=1)
+
+    response = client.post('/users', json={'username': 'alice', 'password': 'password'})
+
+    assert response.status_code == 409
+
+
+def test_register_username_too_long(client):
+    response = client.post('/users', json={'username': 'x' * 50, 'password': 'password'})
+    assert response.status_code == 400
+
+
+def test_register_password_too_short(client):
+    response = client.post('/users', json={'username': 'alice', 'password': ''})
+    assert response.status_code == 400

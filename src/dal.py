@@ -53,3 +53,8 @@ def select_message_receipts(db: Session, sender_id) -> list:
 def select_password_hash(db: Session, user_id) -> str:
     """Get password hash by user_id"""
     return db.execute(text("SELECT password_hash FROM users WHERE user_id = :user_id"), {"user_id": user_id}).scalar()
+
+
+def insert_user(db: Session, username: str, password_hash: str) -> None:
+    db.execute(text("INSERT INTO users (username, password_hash) VALUES (:username, :password_hash)"), {"username": username, "password_hash": password_hash})
+    db.commit()
