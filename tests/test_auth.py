@@ -9,7 +9,7 @@ def test_authorise_returns_user_id():
             return 42
 
     class FakeDB:
-        def execute(self, query):
+        def execute(self, query, params=None):
             return FakeResult()
 
     result = auth.authorise('Bearer sometoken', FakeDB())

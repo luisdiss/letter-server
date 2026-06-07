@@ -16,6 +16,10 @@ os.chdir(SRC)
 import server as server_module  # noqa: E402
 os.chdir(_cwd)
 
+#set fallback db creds so running db diles dont crash if .env is missing
+os.environ.setdefault("DB_USER", "test_dummy")
+os.environ.setdefault("DB_PASSWORD", "test_dummy")
+
 @pytest.fixture(scope='session')
 def app():
     return server_module.app
