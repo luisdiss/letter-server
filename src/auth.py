@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 def authorise(auth_token: str, db: Session) -> int | None:
     """Takes a token and returns the user_id if the authentication token is valid"""
-    return db.execute(text(f"SELECT user_id FROM sessions WHERE session_token = '{auth_token.split(" ")[1]}'")).scalar()
+    return db.execute(text(f"SELECT user_id FROM sessions WHERE session_token = :auth_token"), {"auth_token": auth_token.split(" ")[1]}).scalar()
 
 
 def create_session(user_id: int, db: Session) -> str:

@@ -1,14 +1,19 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-import json
+import os
+from dotenv import load_dotenv
+
+load_dotenv() 
 
 try:
-    with open("dbcred.json") as file:
-        creds = json.load(file)
-except Exception:
-    print('could not get db creds')
+    creds = {
+        "user": os.environ["DB_USER"],
+        "password": os.environ["DB_PASSWORD"],
+    }
+except KeyError as e:
+    raise RuntimeError(f"Missing environment variable: {e}")
 
-sqlalchemy_database_url = f"postgresql://{creds['username']}:{creds['password']}@localhost/letter"
+sqlalchemy_database_url = f"postgresql://{creds['user']}:{creds['password']}@localhost/letter"
 engine = create_engine(sqlalchemy_database_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
