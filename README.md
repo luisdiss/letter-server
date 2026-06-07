@@ -1,64 +1,76 @@
 Server — Letter
 ================
 
-A focused FastAPI backend for storing and serving messages. The server is intentionally compact and organized for clarity and testability.
+FastAPI backend. Handles auth, message storage, and delivery over a REST API.
 
-Highlights
-----------
-- FastAPI REST API
-- Simple DAL layer using SQLAlchemy and parameterized SQL
-- Argon2 password hashing and session tokens
-- Modular layout: `routes`, `dal`, `auth`, `utils`
+Running locally
+---------------
+You need a Postgres database named `letter` running on localhost.
 
-Quickstart
-----------
-1. Create and activate a virtualenv:
+Create `src/.env` with your credentials:
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
+```
+DB_USER=postgres
+DB_PASSWORD=yourpassword
 ```
 
-2. Install dependencies:
+Run the schema once on a fresh database:
 
 ```bash
-pip install -r requirements.txt
+psql -U postgres -d letter -f init.sql
 ```
 
-3. (Optional) Edit `config.json` to adjust limits and settings.
-
-4. Run the server for development:
+Install and start:
 
 ```bash
+pip install -e ".[dev]"
+cd src
 python server.py
 ```
 
-API Endpoints
--------------
-- `POST /login` — body: `{ "username": "u", "password": "p" }` → returns `{ "auth_token": "..." }`
-- `GET /messages` — header `Authorization: Token <token>` → returns a JSON list of messages
-- `POST /messages` — send a message with `{ conversation_id, recipient_username, content, sent_at, expiration }`
-- `HEAD /users/{username}` — check user existence
+Running with Docker
+-------------------
+This starts both the server and a Postgres container together. No local Postgres needed.
 
-Testing & CI notes
-------------------
-- Add unit tests for DAL functions and API endpoints using `pytest` and FastAPI `TestClient`.
-- Add a GitHub Actions workflow to run linting, types, and tests on pull requests.
+```bash
+docker compose up --build
+```
 
-Deployment
-----------
-- Add a `Dockerfile` and `docker-compose.yml` for demo deployments.
-- In production, run behind an HTTPS reverse proxy and enable proper DB credentials handling.
+The database is created automatically on first run using `init.sql`. Data persists in a Docker volume between restarts.
 
-Files of interest
------------------
+To stop and wipe everything (including the database volume):
+
+```bash
+docker compose down -v
+```
+
+Pointing at an external database
+---------------------------------
+Run just the server image against any Postgres instance by passing env vars:
+
+```bash
+docker run -p 8000:8000 \
+  -e DB_HOST=your-db-host \
+  -e DB_USER=youruser \
+  -e DB_PASSWORD=yourpassword \
+  letter-server
+```
+
+You'll need to have run `init.sql` against that database first.
+
+API
+---
+All endpoints except `/login` require `Authorization: Token <token>` in the header.
+
+- `POST /login` — `{ "username": "u", "password": "p" }` → `{ "auth_token": "..." }`
+- `GET /messages` — returns unread messages for the authenticated user
+- `POST /messages` — `{ conversation_id, recipient_username, content, sent_at, expiration }`
+- `HEAD /users/{username}` — 200 if the user exists, 404 if not
+
+Files
+-----
 - `server.py` — app entry and lifespan
 - `routes.py` — API endpoints
-- `dal.py` — DB interactions
-- `auth.py` — session management
-- `utils.py` — helper functions
-
-Next improvements
------------------
-- Integration tests and a containerized demo
-- Basic rate limiting and stricter request validation
+- `dal.py` — all DB queries
+- `auth.py` — session token creation and validation
+- `utils.py` — helpers

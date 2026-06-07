@@ -13,7 +13,8 @@ try:
 except KeyError as e:
     raise RuntimeError(f"Missing environment variable: {e}")
 
-sqlalchemy_database_url = f"postgresql://{creds['user']}:{creds['password']}@localhost/letter"
+DB_HOST = os.environ.get("DB_HOST", "localhost")
+sqlalchemy_database_url = f"postgresql://{creds['user']}:{creds['password']}@{DB_HOST}/letter"
 engine = create_engine(sqlalchemy_database_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
