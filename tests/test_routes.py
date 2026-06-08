@@ -41,7 +41,7 @@ def test_login_invalid_username_length(client):
 def test_login_username_not_found(client, mocker):
     mocker.patch('routes.select_user_id', return_value=None)
     response = client.post('/login', json={'username': 'alice', 'password': 'password'})
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 def test_login_wrong_password(client, mocker):
@@ -99,7 +99,7 @@ def test_send_message_creates_conversation_id(client, mocker):
     mocker.patch('routes.insert_conversation', return_value=None)
     mocker.patch('routes.insert_message', return_value=99)
     mocker.patch('routes.insert_message_recipient', return_value=None)
-    mocker.patch('routes.create_1to1_coversation_id', return_value=12345)
+    mocker.patch('routes.create_1to1_conversation_id', return_value=12345)
 
     response = client.post('/messages', json={
         'conversation_id': None,
@@ -129,7 +129,7 @@ def test_send_message_recipient_not_found(client, mocker):
     assert response.status_code == 404
 
 
-def test_send_message_existing_conversation_returns_empty(client, mocker):
+def test_send_message_existing_conversation_returns_conversation_id(client, mocker):
     mocker.patch('routes.authorise', return_value=1)
     mocker.patch('routes.select_user_id', return_value=2)
     mocker.patch('routes.insert_message', return_value=99)
@@ -144,7 +144,7 @@ def test_send_message_existing_conversation_returns_empty(client, mocker):
     }, headers={'Authorization': 'Bearer token'})
 
     assert response.status_code == 200
-    assert json.loads(response.content) == {}
+    assert json.loads(response.content) == {'conversation_id': 123}
 
 
 def test_check_username_invalid_format(client):

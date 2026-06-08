@@ -6,7 +6,7 @@ from models import Message
 
 def insert_message_recipient(db: Session, message_id: int, recipient_user_id: int):
     """Insert a message recipient record"""
-    db.execute(text("INSERT INTO message_recipients VALUES (:message_id, :recipient_id, :is_read)"), {"message_id": message_id, "recipient_id": recipient_user_id, "is_read": "FALSE"})
+    db.execute(text("INSERT INTO message_recipients VALUES (:message_id, :recipient_id, :is_read)"), {"message_id": message_id, "recipient_id": recipient_user_id, "is_read": False})
     db.commit()
 
 
@@ -17,15 +17,13 @@ def insert_message(db: Session, conversation_id: int, sender_id: int, content: s
 
 def insert_conversation(db: Session, conversation_id):
     """Insert a new conversation"""
-    db.execute(text("INSERT INTO conversations VALUES (:conversation_id, :subject, :created_at)"), {"conversation_id": conversation_id, "subject": "NULL", "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    db.execute(text("INSERT INTO conversations VALUES (:conversation_id, :subject, :created_at)"), {"conversation_id": conversation_id, "subject": None, "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
     db.commit()
 
 
 def conversation_exists(db: Session, conversation_id: int) -> bool:
     """Check if a conversation exists"""
-    if db.execute(text(f"SELECT conversation_id FROM conversations WHERE conversation_id = {conversation_id}")).scalar() == None:
-        return False
-    return True
+    return db.execute(text("SELECT conversation_id FROM conversations WHERE conversation_id = :conversation_id"), {"conversation_id": conversation_id}).scalar() is not None
 
 
 def select_user_id(db: Session, username: str) -> int | None:
@@ -40,7 +38,7 @@ def select_username(db: Session, user_id: int) -> str | None:
 
 def select_message(db: Session, message_id: int) -> Message | None:
     """Get message by message_id"""
-    return db.execute(text("SELECT * FROM messages WHERE message_id = :message_id"), {"message_id": message_id}).fetchall()[0]
+    return db.execute(text("SELECT * FROM messages WHERE message_id = :message_id"), {"message_id": message_id}).fetchone()
 
 
 def select_message_receipts(db: Session, sender_id) -> list:

@@ -90,6 +90,15 @@ All endpoints except `/login` and `POST /users` require `Authorization: Token <t
 - `POST /messages` — `{ conversation_id, recipient_username, content, sent_at, expiration }` → `{ "conversation_id": ... }`
 - `HEAD /users/{username}` — 200 if the user exists, 404 if not
 
+Known limitations
+-----------------
+- Session tokens never expire. A stolen token grants permanent access until manually removed from the database.
+- No rate limiting on login. Brute force is unrestricted.
+- Messages are stored in plain text in the database.
+- No database backup. If the Docker volume is lost, all data is gone.
+- `GET /messages` marks messages as read atomically when fetching them. If the client fails before saving, those messages are permanently lost.
+- `GET /messages` returns all unread messages at once with no pagination.
+
 Files
 -----
 - `server.py` — app entry and lifespan

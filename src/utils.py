@@ -13,7 +13,7 @@ def datetime_obj_to_timestamp(dt_object) -> int:
     return int(dt_object.timestamp())
 
 
-def create_1to1_coversation_id(user_id1: int, user_id2: int) -> int:
+def create_1to1_conversation_id(user_id1: int, user_id2: int) -> int:
     """Create a conversation ID from two user IDs (size compatible with postgres BIGINT)"""
     a, b = sorted([user_id1, user_id2])
     combined = f"{a}:{b}".encode('utf-8')

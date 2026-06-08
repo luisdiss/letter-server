@@ -13,7 +13,7 @@ from dal import (
     conversation_exists, insert_conversation, insert_user
 )
 from utils import (
-    create_1to1_coversation_id, timestamp_to_datetime_str, datetime_obj_to_timestamp
+    create_1to1_conversation_id, timestamp_to_datetime_str, datetime_obj_to_timestamp
 )
 from argon2 import PasswordHasher, exceptions
 
@@ -43,7 +43,7 @@ def get_routes(app):
 
         user_id = select_user_id(db, username)
         if user_id == None:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
         stored_hash = select_password_hash(db, user_id)
         try:
@@ -99,16 +99,13 @@ def get_routes(app):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
         dt_str = timestamp_to_datetime_str(message.sent_at)
-        if message.conversation_id == None:
-            conversation_id = create_1to1_coversation_id(sender_id, recipient_user_id)
-            exists = conversation_exists(db, conversation_id)
-            if not exists:
+        if message.conversation_id is None:
+            conversation_id = create_1to1_conversation_id(sender_id, recipient_user_id)
+            if not conversation_exists(db, conversation_id):
                 insert_conversation(db, conversation_id)
-            return_data = json.dumps({"conversation_id": conversation_id})
         else:
             conversation_id = message.conversation_id
-            return_data = json.dumps({})
 
         message_id = insert_message(db, conversation_id, sender_id, message.content, dt_str, message.expiration)
         insert_message_recipient(db, message_id, recipient_user_id)
-        return Response(status_code=status.HTTP_200_OK, content=return_data)
+        return Response(status_code=status.HTTP_200_OK, content=json.dumps({"conversation_id": conversation_id}))
